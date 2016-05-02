@@ -1,51 +1,39 @@
 package com.techno_twit.harshal.pharmahelp;
 
-import android.app.Activity;
+import android.app.FragmentManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link SearchFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link SearchFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class SearchFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnFragmentInteractionListener mListener;
+    View view;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    ListView mListView;
+    View defaultView;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment SearchFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static SearchFragment newInstance(String param1, String param2) {
-        SearchFragment fragment = new SearchFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    String link;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -54,36 +42,60 @@ public class SearchFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_search, container, false);
+
+        view = inflater.inflate(R.layout.fragment_search, container, false);
+        link="http://"+Connectivity.getIpPort()+"/psr/getmedicine.php";
+
+        Bundle args=getArguments();
+        if(args!=null&&args.containsKey("catogery")){
+            link="http://"+Connectivity.getIpPort()+"/psr/getcatogerymedicine.php"+"?catogery="+args.getString("catogery");
+        }
+        setupWindow(view);
+
+
+
+        return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    public void refresh() {
+
+        getMedicines med=new getMedicines(mListView);
+        med.execute();
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
+    private void setupWindow(View view) {
+        defaultView = view.findViewById(android.R.id.content);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.activity_main_swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refresh();
+
+            }
+
+        });
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.orange, R.color.green, R.color.blue);
+
+        //List View
+        mListView = (ListView) view.findViewById(R.id.list);
+
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO finish here
+            }
+        });
+
+        refresh();
+
     }
+
 
     @Override
     public void onDetach() {
@@ -91,19 +103,105 @@ public class SearchFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
+
         public void onFragmentInteraction(Uri uri);
+
+    }
+
+    private class getMedicines extends AsyncTask<Void, Void,Boolean >{
+
+        ListView listView;
+        String[] name;
+        String[] catogery;
+        String[] description;
+        int[] price;
+
+        public getMedicines(ListView mListview){
+            this.listView=mListview;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            HttpURLConnection con= null;
+            try {
+                URL url=new URL(link);
+                con = (HttpURLConnection)url.openConnection();
+                con.setRequestMethod("POST");
+
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setConnectTimeout(15000);
+                con.setDoInput(true);
+                con.setDoOutput(true);
+
+                BufferedReader buff=new BufferedReader(new InputStreamReader(con.getInputStream()));
+                StringBuilder result=new StringBuilder();
+
+                String line;
+                while((line=buff.readLine())!=null){
+                    result.append(line);
+                }
+
+                if(result==null){
+                    return false;
+                }
+
+                JSONArray json1=new JSONArray(result.toString());
+                name = new String[json1.length()];
+                catogery= new String[json1.length()];
+                 description = new String[json1.length()];
+                price = new int[json1.length()];
+                for(int i=0;i<json1.length();i++) {
+                    JSONArray json = json1.getJSONArray(i);
+                    name[i]=json.getString(0);
+                    description[i]=json.getString(1);
+                    catogery[i]=json.getString(2);
+                    price[i]=json.getInt(3);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+
+            }
+
+            return true;
+        }
+        @Override
+        public void onPostExecute(Boolean param){
+            if(param==false){
+                //Snackbar.make(defaultView,"No results",Snackbar.LENGTH_SHORT).show();
+                Log.i("Search","No return");
+                return;
+            }
+
+            ArrayAdapter<String> itemsAdapter =
+                    new ArrayAdapter<String>(getActivity(), R.layout.catogery_list_rows, R.id.firstLine, name);
+            listView.setAdapter(itemsAdapter);
+
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    Fragment fragment = new DetailsFragment();
+                    final Bundle bundle = new Bundle();
+                    bundle.putString("name", name[position]);
+                    bundle.putString("description", description[position]);
+                    bundle.putString("catogery", catogery[position]);
+                    bundle.putInt("price", price[position]);
+                    fragment.setArguments(bundle);
+
+                    FragmentManager fragmentManager = getFragmentManager();
+                    fragmentManager.beginTransaction().replace(R.id.frame, fragment).commit();
+                }
+            });
+
+        }
     }
 
 }
