@@ -1,5 +1,8 @@
 package com.techno_twit.harshal.pharmahelp;
 
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.ProgressDialog;
@@ -12,19 +15,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class Signup extends AppCompatActivity {
         private static final String TAG = "SignupActivity";
 
-
         EditText _nameText;
-
         EditText _emailText;
-
         EditText _passwordText;
-
         Button _signupButton;
-
         TextView _loginLink;
+        View defaultView;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -36,8 +42,6 @@ public class Signup extends AppCompatActivity {
             _passwordText = (EditText)findViewById(R.id.input_password);
             _signupButton = (Button)findViewById(R.id.btn_signup);
             _loginLink = (TextView)findViewById(R.id.link_login);
-
-
 
             _signupButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -57,6 +61,7 @@ public class Signup extends AppCompatActivity {
 
         public void signup() {
             Log.d(TAG, "Signup");
+            defaultView = findViewById(android.R.id.content);
 
             if (!validate()) {
                 onSignupFailed();
@@ -65,9 +70,9 @@ public class Signup extends AppCompatActivity {
 
             _signupButton.setEnabled(false);
 
-            final ProgressDialog progressDialog = new ProgressDialog(Signup.this,
-                    R.style.AppTheme);
+            final ProgressDialog progressDialog = new ProgressDialog(Signup.this);
             progressDialog.setIndeterminate(true);
+            progressDialog.setCancelable(false);
             progressDialog.setMessage("Creating Account...");
             progressDialog.show();
 
@@ -75,18 +80,8 @@ public class Signup extends AppCompatActivity {
             String email = _emailText.getText().toString();
             String password = _passwordText.getText().toString();
 
-            // TODO: Implement your own signup logic here.
-
-            new android.os.Handler().postDelayed(
-                    new Runnable() {
-                        public void run() {
-                            // On complete call either onSignupSuccess or onSignupFailed
-                            // depending on success
-                            onSignupSuccess();
-                            // onSignupFailed();
-                            progressDialog.dismiss();
-                        }
-                    }, 3000);
+            Register register=new Register(name,password,email,"customer",progressDialog);
+            register.execute();
         }
 
 
@@ -132,5 +127,61 @@ public class Signup extends AppCompatActivity {
 
             return valid;
         }
+    private class Register extends AsyncTask<Void,Void,String> {
+
+        String username,password,email,role;
+        ProgressDialog progressDialog;
+
+        public Register(String username, String password,String email,String role,ProgressDialog progressDialog){
+            this.username=username;
+            this.password=password;
+            this.email=email;
+            this.role=role;
+            this.progressDialog=progressDialog;
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                URL url=new URL("http://"+Connectivity.getIpPort()+"/psr/register.php?username="+username+"&password="+password
+                +"&email="+email+"&role="+role);
+                HttpURLConnection con=(HttpURLConnection)url.openConnection();
+
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setConnectTimeout(15000);
+                con.setDoInput(true);
+                con.setDoOutput(true);
+
+                BufferedReader buff=new BufferedReader(new InputStreamReader(con.getInputStream()));
+                StringBuilder result=new StringBuilder();
+                String line;
+                while((line=buff.readLine())!=null){
+                    result.append(line);
+                }
+
+                return result.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                return null;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        public void onPostExecute(String result){
+            if(result==null||result.contains("error")){
+                Snackbar.make(defaultView, "Error try again", Snackbar.LENGTH_SHORT).show();
+                onSignupFailed();
+                Log.i("test", "fail");
+            }else{
+                Snackbar.make(defaultView,"Success",Snackbar.LENGTH_SHORT).show();
+                onSignupSuccess();
+            }
+            progressDialog.dismiss();
+        }
+    }
     }
 

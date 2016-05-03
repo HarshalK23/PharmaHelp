@@ -1,23 +1,17 @@
 package com.techno_twit.harshal.pharmahelp;
 
 import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
+import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
-import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,37 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
                 //Closing drawer on item click
                 drawerLayout.closeDrawers();
-
-                //Check to see which item was being clicked and perform appropriate action
-                switch (menuItem.getItemId()){
-
-
-                    //Replacing the main content with ContentFragment Which is our Inbox View;
-                    case R.id.profile:
-                        Toast.makeText(getApplicationContext(),"Inbox Selected",Toast.LENGTH_SHORT).show();
-                        ProfileFragment fragment = new ProfileFragment();
-                        android.support.v4.app.FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.frame,fragment);
-                        fragmentTransaction.commit();
-                        return true;
-
-                    // For rest of the options we just show a toast on click
-
-                    case R.id.cate:
-                        Toast.makeText(getApplicationContext(),"Stared Selected",Toast.LENGTH_SHORT).show();
-                        return true;
-                    case R.id.search:
-                        Toast.makeText(getApplicationContext(),"Send Selected",Toast.LENGTH_SHORT).show();
-                        return true;
-                    case R.id.feed:
-                        Toast.makeText(getApplicationContext(),"Drafts Selected",Toast.LENGTH_SHORT).show();
-                        return true;
-
-                    default:
-                        Toast.makeText(getApplicationContext(),"Somethings Wrong",Toast.LENGTH_SHORT).show();
-                        return true;
-
-                }
+                openFragment(menuItem);
+                return true;
             }
         });
 
@@ -110,12 +75,42 @@ public class MainActivity extends AppCompatActivity {
         //calling sync state is necessay or else your hamburger icon wont show up
         actionBarDrawerToggle.syncState();
 
-
-
-
-
-
     }
+    private void openFragment(MenuItem item){
+
+        Fragment fragment=null;
+        Class fragmentClass=null;
+        FragmentManager fragmentManager=getFragmentManager();
+
+        switch (item.getItemId()){
+            /*
+            case R.id.profile:
+                ProfileFragment profile=new ProfileFragment();
+                fragmentManager.beginTransaction().replace(R.id.frame,profile).commit();
+                break;
+                */
+            case R.id.cate:
+                CategoryFragment cat=new CategoryFragment();
+                fragmentManager.beginTransaction().replace(R.id.frame,cat).commit();
+                break;
+            case R.id.search:
+                SearchFragment search=new SearchFragment();
+                fragmentManager.beginTransaction().replace(R.id.frame,search).commit();
+                break;
+            case R.id.feed:
+
+                FeedbackFragment feed=FeedbackFragment.newInstance();
+                fragmentManager.beginTransaction().replace(R.id.frame,feed).commit();
+                break;
+            //default:
+                //fragmentClass= ProfileFragment.class;
+        }
+
+
+        item.setChecked(true);
+        setTitle(item.getTitle());
+
+        }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -126,16 +121,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (item.getTitle().equals("Location")) {
+            Intent in = new Intent(MainActivity.this, MapsActivity.class);
+            startActivity(in);
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 }
