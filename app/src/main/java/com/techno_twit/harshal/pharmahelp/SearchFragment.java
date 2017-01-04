@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,12 +30,12 @@ import java.net.URL;
 
 public class SearchFragment extends Fragment {
 
+
     private OnFragmentInteractionListener mListener;
     View view;
     SwipeRefreshLayout mSwipeRefreshLayout;
     ListView mListView;
     View defaultView;
-
     String link;
 
     public SearchFragment() {
@@ -55,7 +58,9 @@ public class SearchFragment extends Fragment {
         if(args!=null&&args.containsKey("catogery")){
             link="http://"+Connectivity.getIpPort()+"/psr/getcatogerymedicine.php"+"?catogery="+args.getString("catogery");
         }
+
         setupWindow(view);
+
 
 
 
@@ -116,7 +121,7 @@ public class SearchFragment extends Fragment {
         String[] catogery;
         String[] description;
         int[] price;
-
+        String[] photo;
         public getMedicines(ListView mListview){
             this.listView=mListview;
         }
@@ -146,18 +151,20 @@ public class SearchFragment extends Fragment {
                 if(result==null){
                     return false;
                 }
-
+                Log.e("error",result.toString());
                 JSONArray json1=new JSONArray(result.toString());
                 name = new String[json1.length()];
                 catogery= new String[json1.length()];
                  description = new String[json1.length()];
                 price = new int[json1.length()];
+                photo=new String[json1.length()];
                 for(int i=0;i<json1.length();i++) {
                     JSONArray json = json1.getJSONArray(i);
                     name[i]=json.getString(0);
                     description[i]=json.getString(1);
                     catogery[i]=json.getString(2);
                     price[i]=json.getInt(3);
+                    photo[i]=json.getString(4);
                 }
 
             } catch (IOException e) {
@@ -194,6 +201,7 @@ public class SearchFragment extends Fragment {
                     bundle.putString("description", description[position]);
                     bundle.putString("catogery", catogery[position]);
                     bundle.putInt("price", price[position]);
+                    bundle.putString("photo",photo[position]);
                     fragment.setArguments(bundle);
 
                     FragmentManager fragmentManager = getFragmentManager();

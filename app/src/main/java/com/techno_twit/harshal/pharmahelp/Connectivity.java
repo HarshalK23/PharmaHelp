@@ -5,7 +5,7 @@ package com.techno_twit.harshal.pharmahelp;
  */
 public class Connectivity {
 
-    static String ip="192.168.43.21";
+    static String ip="192.168.1.142";
         static int port=8080;
 
         public static String getIpPort(){

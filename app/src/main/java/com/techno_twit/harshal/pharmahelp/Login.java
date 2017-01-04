@@ -183,6 +183,9 @@ public class Login extends Activity
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
+            }catch (Exception e){
+                e.printStackTrace();
+                return null;
             }
         }
 
