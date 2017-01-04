@@ -13,7 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class Login extends Activity
+public class Login extends Activity implements View.OnClickListener
 {
     private static final String TAG = "LoginActivity";
 
@@ -21,6 +21,8 @@ public class Login extends Activity
     EditText _passwordText;
     Button _loginButton;
     TextView _signupLink;
+
+    Button gplus, fb;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -31,6 +33,9 @@ public class Login extends Activity
         _passwordText = (EditText)findViewById(R.id.input_password);
         _loginButton = (Button)findViewById(R.id.btn_login);
         _signupLink = (TextView)findViewById(R.id.link_signup);
+
+        gplus=(Button)findViewById(R.id.google);
+        fb = (Button)findViewById(R.id.facebook);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
@@ -49,6 +54,9 @@ public class Login extends Activity
                 startActivity(intent);
             }
         });
+
+        gplus.setOnClickListener(this);
+        fb.setOnClickListener(this);
     }
 
     public void login() {
@@ -136,5 +144,29 @@ public class Login extends Activity
         }
 
         return valid;
+    }
+
+    @Override
+    public void onClick(View v) {
+
+
+        switch (v.getId())
+        {
+            case R.id.google:
+
+                Intent i = new Intent(this, Google.class);
+                startActivity(i);
+
+
+                break;
+
+            case R.id.facebook:
+
+                Intent i1 = new Intent(this, Facebook.class);
+                startActivity(i1);
+
+                break;
+        }
+
     }
 }
