@@ -67,8 +67,7 @@ public class MapsActivity extends AppCompatActivity
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
-            PermissionsUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
             mMap.setMyLocationEnabled(true);
@@ -91,8 +90,8 @@ public class MapsActivity extends AppCompatActivity
             return;
         }
 
-        if (PermissionsUtils.isPermissionGranted(permissions, grantResults,
-                Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
             // Enable the my location layer if the permission has been granted.
             enableMyLocation();
         } else {
@@ -115,8 +114,8 @@ public class MapsActivity extends AppCompatActivity
      * Displays a dialog with error message explaining that the location permission is missing.
      */
     private void showMissingPermissionError() {
-        PermissionsUtils.PermissionDeniedDialog
-                .newInstance(true).show(getSupportFragmentManager(), "dialog");
+       // PermissionsUtils.PermissionDeniedDialog
+       //         .newInstance(true).show(getSupportFragmentManager(), "dialog");
     }
 
 }

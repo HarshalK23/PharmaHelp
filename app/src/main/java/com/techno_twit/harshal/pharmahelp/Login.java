@@ -150,9 +150,42 @@ public class Login extends Activity implements View.OnClickListener
     public void onClick(View v) {
 
 
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                URL url=new URL("http://"+Connectivity.getIpPort()+"/psr/login.php?username="+username);
+                HttpURLConnection con=(HttpURLConnection)url.openConnection();
+
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                con.setConnectTimeout(15000);
+                con.setDoInput(true);
+                con.setDoOutput(true);
+
+                BufferedReader buff=new BufferedReader(new InputStreamReader(con.getInputStream()));
+                StringBuilder result=new StringBuilder();
+                String line;
+                while((line=buff.readLine())!=null){
+                    result.append(line);
+                }
+                buff.close();
+                return result.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                return null;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }catch (Exception e){
+                e.printStackTrace();
+                return null;
+            }
+        }
+
         switch (v.getId())
         {
-            case R.id.google:
+            case R.id.goog
 
                 Intent i = new Intent(this, Google.class);
                 startActivity(i);

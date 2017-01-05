@@ -147,7 +147,7 @@ public class Signup extends AppCompatActivity {
                 +"&email="+email+"&role="+role);
                 HttpURLConnection con=(HttpURLConnection)url.openConnection();
 
-                con.setRequestMethod("POST");
+                con.setRequestMethod("GET");
                 con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 con.setConnectTimeout(15000);
                 con.setDoInput(true);
@@ -159,7 +159,7 @@ public class Signup extends AppCompatActivity {
                 while((line=buff.readLine())!=null){
                     result.append(line);
                 }
-
+                Log.i("y",result.toString());
                 return result.toString();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -167,12 +167,15 @@ public class Signup extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
+            }catch (Exception e){
+                e.printStackTrace();
+                return null;
             }
         }
 
         @Override
         public void onPostExecute(String result){
-            if(result==null||result.contains("error")){
+            if(result==null||result.contains("error")||result.contains("Could not connect")){
                 Snackbar.make(defaultView, "Error try again", Snackbar.LENGTH_SHORT).show();
                 onSignupFailed();
                 Log.i("test", "fail");
