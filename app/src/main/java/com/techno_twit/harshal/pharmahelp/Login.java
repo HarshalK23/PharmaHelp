@@ -2,10 +2,7 @@ package com.techno_twit.harshal.pharmahelp;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 
 import android.content.Intent;
@@ -15,22 +12,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-
-
-public class Login extends Activity
+public class Login extends Activity implements View.OnClickListener
 {
     private static final String TAG = "LoginActivity";
 
@@ -38,7 +21,8 @@ public class Login extends Activity
     EditText _passwordText;
     Button _loginButton;
     TextView _signupLink;
-    View defaultView;
+
+    Button gplus, fb;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,6 +33,9 @@ public class Login extends Activity
         _passwordText = (EditText)findViewById(R.id.input_password);
         _loginButton = (Button)findViewById(R.id.btn_login);
         _signupLink = (TextView)findViewById(R.id.link_signup);
+
+        gplus=(Button)findViewById(R.id.google);
+        fb = (Button)findViewById(R.id.facebook);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
@@ -67,6 +54,9 @@ public class Login extends Activity
                 startActivity(intent);
             }
         });
+
+        gplus.setOnClickListener(this);
+        fb.setOnClickListener(this);
     }
 
     public void login() {
@@ -78,28 +68,37 @@ public class Login extends Activity
         }
 
         _loginButton.setEnabled(false);
-        defaultView = findViewById(android.R.id.content);
 
-        final ProgressDialog progressDialog = new ProgressDialog(Login.this);
+        final ProgressDialog progressDialog = new ProgressDialog(Login.this,
+                R.style.AppTheme);
         progressDialog.setIndeterminate(true);
-        progressDialog.setCancelable(false);
         progressDialog.setMessage("Authenticating...");
         progressDialog.show();
 
-        String username = _emailText.getText().toString();
+        String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        Logincheck login=new Logincheck(username,password,progressDialog);
-        login.execute();
+        // TODO: Implement your own authentication logic here.
 
+        new android.os.Handler().postDelayed(
+                new Runnable() {
+                    public void run() {
+                        // On complete call either onLoginSuccess or onLoginFailed
+                        onLoginSuccess();
+                        Intent i = new Intent(Login.this , MainActivity.class);
+                        startActivity(i);
+                        progressDialog.dismiss();
+                    }
+                }, 3000);
     }
-
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
             if (resultCode == RESULT_OK) {
+
+                // TODO: Implement successful signup logic here
                 // By default we just finish the Activity and log them in automatically
                 this.finish();
             }
@@ -130,7 +129,7 @@ public class Login extends Activity
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        if (email.isEmpty()) {
+        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             _emailText.setError("enter a valid email address");
             valid = false;
         } else {
@@ -147,15 +146,10 @@ public class Login extends Activity
         return valid;
     }
 
-    private class Logincheck extends AsyncTask<Void,Void,String>{
+    @Override
+    public void onClick(View v) {
 
-        String username,password;
-        ProgressDialog progressDialog;
-        public Logincheck(String username, String password,ProgressDialog progressDialog){
-            this.username=username;
-            this.password=password;
-            this.progressDialog=progressDialog;
-        }
+
 
         @Override
         protected String doInBackground(Void... params) {
@@ -189,23 +183,23 @@ public class Login extends Activity
             }
         }
 
-        @Override
-        public void onPostExecute(String result){
-            if(result==null||result.contains("error")){
-                Snackbar.make(defaultView,"Error try again",Snackbar.LENGTH_SHORT).show();
-                Log.i("test", "fail");
-            }else if(result.contains(password)){
-                onLoginSuccess();
-                Intent i = new Intent(Login.this, MainActivity.class);
-                startActivity(i);
-                Log.i("test","Success");
-            }else{
-                Snackbar.make(defaultView,"Password incorrect",Snackbar.LENGTH_SHORT).show();
-                Log.i("test", "fail1");
-            }
-            _loginButton.setEnabled(true);
-            progressDialog.dismiss();
-        }
-    }
+        switch (v.getId())
+        {
+            case R.id.goog
 
+                Intent i = new Intent(this, Google.class);
+                startActivity(i);
+
+
+                break;
+
+            case R.id.facebook:
+
+                Intent i1 = new Intent(this, Facebook.class);
+                startActivity(i1);
+
+                break;
+        }
+
+    }
 }
